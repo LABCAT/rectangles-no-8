@@ -5,8 +5,8 @@ import * as p5 from "p5";
 import { Midi } from '@tonejs/midi'
 import PlayIcon from './functions/PlayIcon.js';
 
-import audio from "../audio/strings-no-2.ogg";
-import midi from "../audio/strings-no-2.mid";
+import audio from "../audio/rectangles-no-8.ogg";
+import midi from "../audio/rectangles-no-8.mid";
 
 /**
  * Blobs No. 2
@@ -32,10 +32,16 @@ const P5SketchWithAudio = () => {
             Midi.fromUrl(midi).then(
                 function(result) {
                     console.log(result);
-                    const noteSet1 = result.tracks[7].notes; // Europa - Friendly Keys
+                    const noteSet1 = result.tracks[4].notes.filter(note => note.midi !== 43); // Redrum - roland tr-808 (kit01)
                     p.scheduleCueSet(noteSet1, 'executeCueSet1');
-                    const noteSet2 = result.tracks[2].notes; // Subtractor - Enoch Pad
+                    const noteSet2 = result.tracks[2].notes; // Subtrator - Raison d'etre
                     p.scheduleCueSet(noteSet2, 'executeCueSet2');
+                    const noteSet3 = result.tracks[9].notes; // Subtrator - Vibra
+                    p.scheduleCueSet(noteSet3, 'executeCueSet3');
+                    const noteSet4 = result.tracks[5].notes; // Europa - Night Driver
+                    p.scheduleCueSet(noteSet4, 'executeCueSet4');
+                    const noteSet5 = result.tracks[6].notes; // Europa - Impact Square
+                    p.scheduleCueSet(noteSet5, 'executeCueSet5');
                     p.audioLoaded = true;
                     document.getElementById("loader").classList.add("loading--complete");
                     document.getElementById("play-icon").classList.remove("fade-out");
@@ -64,104 +70,94 @@ const P5SketchWithAudio = () => {
             }
         }
 
-        p.noiseMax = 1;
+        p.horizontalGrid = true; 
 
-        p.zoff = 0;
+        p.cellSize = 0;
 
-        p.ca = 0;
-        
-        p.cb = 0;
-
-        p.ox = 0;
-        
-        p.oy = 0;
-
-        p.max = 0;
-
-        p.scaleMultiplier = 4;
+        p.gridCells = [];
 
         p.setup = () => {
             p.canvas = p.createCanvas(p.canvasWidth, p.canvasHeight);
             p.colorMode(p.HSB);
-            p.angleMode(p.DEGREES);
             p.background(0, 0, 0);
-            p.noFill();
-            p.ca = p.color("#0CCBCFAA");
-            p.cb = p.color("#FE68B5AA");
-            p.ox = p.width / 2;
-            p.oy = p.height /2;
+            let maxX = 16;
+            let maxY = 8;
+            p.cellSize = p.height / 9;
+            if(p.height > p.width) {
+                p.horizontalGrid = false; 
+                p.cellSize = p.width / 9;
+                maxX = 8;
+                maxY = 16;
+            } 
 
-            p.max = p.width > p.height ? p.width : p.height ;
+            for (let x = 0; x < maxX; x++) {
+                for (let y = 0; y < maxY; y++) {
+                    p.gridCells.push(
+                        {
+                            x: x * p.cellSize,
+                            y: y * p.cellSize,
+                            size: p.cellSize,
+                            hue: undefined
+                        }
+                    )
+                }
+            }
+
+            p.translateX = (p.width - (maxX * p.cellSize)) / 2;
+            p.translateY = (p.height - (maxY * p.cellSize)) / 2;
+            p.translate(p.translateX, p.translateY);
         }
 
         p.draw = () => {
-            if(p.audioLoaded && p.song.isPlaying()){
-                p.stroke(
-                    p.lerpColor(p.ca, p.cb, p.abs(p.sin(p.zoff * 100)))
-                );
-                p.push();
-                p.translate(p.ox, p.oy);
-                p.scale(1/p.scaleMultiplier);
-                p.beginShape();
-                for (let t = 0; t < 720; t++) {
-                    let xoff = p.map(p.cos(t), -1, 1, 0, p.noiseMax);
-                    let yoff = p.map(p.sin(t), -1, 1, 0, p.noiseMax);
-
-                    let n = p.noise(xoff, yoff, p.zoff);
-
-                    let r = p.map(n, 0, 1, 0, p.height * 1.5);
-                    let x = r * p.cos(t);
-                    let y = r * p.sin(t);
-                    p.vertex(x, y);
+            p.translate(p.translateX, p.translateY);
+            for (let i = 0; i < p.gridCells.length; i++) {
+                const cell = p.gridCells[i];
+                const { x, y, size, hue } = cell;
+                if(hue === undefined) {
+                    p.fill(0, 0, 100);
+                } 
+                else {
+                    p.fill(hue, 100, 100);
                 }
-                p.endShape(p.CLOSE);
-                p.scale(p.scaleMultiplier);
-                p.translate(-p.ox, -p.oy);
-
-                p.zoff += 0.005;
+                p.rect(x, y, size, size);
+            }
+            p.translate(-p.translateX, -p.translateY);
+            if(p.audioLoaded && p.song.isPlaying()){
+               
             }
         }
 
         p.executeCueSet1 = (note) => {
-            const { midi, durationTicks, ticks } = note;
-            if(midi < 62 && durationTicks > 30000) {
-                console.log(note);
-                p.ca = p.color(
-                    p.random(0, 360),
-                    100,
-                    100
-                );
-
-                p.cb = p.color(
-                    p.random(0, 360),
-                    100,
-                    100
-                );
-
-                if(ticks % 122880 === 0) {
-                    p.ox = p.random(
-                        p.width / 8,
-                        p.width - p.width / 8
-                    );
-
-                    p.oy = p.random(
-                        p.height / 8,
-                        p.height - p.height / 8
-                    );
-                }
+            const { currentCue } = note; 
+            if(currentCue % 29 === 1 && currentCue < 120) {
+                p.gridCells.forEach(cell => {
+                    cell.hue = undefined;
+                });
             }
         }
 
         p.executeCueSet2 = (note) => {
-            const { midi, currentCue } = note;
-            if(midi < 50) {
-                p.background(0, 0, 0, 0.5);
-                p.scaleMultiplier = p.scaleMultiplier - 0.2;
-                
-                if(currentCue > 20) {
-                    p.blendMode(p.SCREEN);
-                }
-            }
+            const emptyCells = p.gridCells.filter(cell => cell.hue === undefined);
+            const randomCell = p.random(emptyCells);
+            randomCell.hue = 360;
+        }
+
+        p.executeCueSet3 = (note) => {
+            const emptyCells = p.gridCells.filter(cell => cell.hue === undefined);
+            const randomCell = p.random(emptyCells);
+            randomCell.hue = 240;
+        }
+
+        p.executeCueSet4 = (note) => {
+            const emptyCells = p.gridCells.filter(cell => cell.hue === undefined);
+            const randomCell = p.random(emptyCells);
+            randomCell.hue = 80;
+        }
+
+        p.executeCueSet5 = (note) => {
+            const emptyCells = p.gridCells.filter(cell => cell.hue === undefined);
+            const randomCell = p.random(emptyCells);
+            randomCell.hue = 160;
         }
 
         p.hasStarted = false;
