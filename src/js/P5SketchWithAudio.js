@@ -4,6 +4,7 @@ import "p5/lib/addons/p5.sound";
 import * as p5 from "p5";
 import { Midi } from '@tonejs/midi'
 import PlayIcon from './functions/PlayIcon.js';
+import AnimatedRectangle from './classes/AnimatedRectangle.js';
 
 import audio from "../audio/rectangles-no-8.ogg";
 import midi from "../audio/rectangles-no-8.mid";
@@ -68,20 +69,21 @@ const P5SketchWithAudio = () => {
                     currentCue++;
                 }
             }
-        }
-
-        p.horizontalGrid = true; 
-
-        p.cellSize = 0;
+        } 
 
         p.gridCells = [];
+
+        p.bgRect = null;
 
         p.setup = () => {
             p.canvas = p.createCanvas(p.canvasWidth, p.canvasHeight);
             p.colorMode(p.HSB);
-            p.background(0, 0, 0);
+            p.rectMode(p.CENTER);
+            p.background(0, 0, 0, 0.5);
+            p.strokeWeight(5);
             let maxX = 16;
             let maxY = 8;
+            p.horizontalGrid = true;
             p.cellSize = p.height / 9;
             if(p.height > p.width) {
                 p.horizontalGrid = false; 
@@ -96,68 +98,141 @@ const P5SketchWithAudio = () => {
                         {
                             x: x * p.cellSize,
                             y: y * p.cellSize,
-                            size: p.cellSize,
-                            hue: undefined
+                            size: p.cellSize * 0.9,
+                            pattern: undefined
                         }
                     )
                 }
             }
 
-            p.translateX = (p.width - (maxX * p.cellSize)) / 2;
-            p.translateY = (p.height - (maxY * p.cellSize)) / 2;
+            p.translateX = (p.width - (maxX * p.cellSize)) / 2 + (p.cellSize / 2);
+            p.translateY = (p.height - (maxY * p.cellSize)) / 2 + (p.cellSize / 2);
             p.translate(p.translateX, p.translateY);
+
+            // p.snake = new AnimatedRectangle(
+            //     p,
+            //     p.width / 2,
+            //     p.height / 2
+            // )
         }
 
         p.draw = () => {
+            p.background(0, 0, 0);
+            // p.snake.update();
+		    // p.snake.draw();
+            
+		    // if (p.snake.dead) {
+            //     p.snake = new AnimatedRectangle(p, p.snake.x, p.snake.y);
+            // }
             p.translate(p.translateX, p.translateY);
+
+            
+
+            if(p.bgRect) {
+                const { width, height, hue } = p.bgRect;
+                const x = p.width / 2 - p.translateX;
+                const y = p.height / 2 - p.translateY;
+                p.stroke(hue, 100, 100);
+                p.fill(hue, 100, 100, 0.2);
+                p.rect(x, y, width, height);
+                p.fill(hue, 100, 100, 0.4);
+                p.rect(x, y, width / 2, height / 2);
+                p.fill(hue, 100, 100, 0.6);
+                p.rect(x, y, width / 4, height / 4);
+                p.bgRect.width = p.bgRect.width + 8;
+                p.bgRect.height = p.bgRect.height + 8;
+            }
+
+            p.stroke(0, 0, 0);
+
             for (let i = 0; i < p.gridCells.length; i++) {
                 const cell = p.gridCells[i];
-                const { x, y, size, hue } = cell;
-                if(hue === undefined) {
+                const { x, y, size, pattern } = cell;
+                if(pattern === undefined) {
+                    p.stroke(0, 0, 100);
                     p.fill(0, 0, 100);
                 } 
                 else {
-                    p.fill(hue, 100, 100);
+                    pattern.update();
+                    pattern.draw();
+                    
+                    // if (hue.dead) {
+                    //     hue = new AnimatedRectangle(p, hue.x, hue.y, hue.size, hue.hue);
+                    // }
                 }
                 p.rect(x, y, size, size);
             }
             p.translate(-p.translateX, -p.translateY);
-            if(p.audioLoaded && p.song.isPlaying()){
-               
-            }
         }
 
         p.executeCueSet1 = (note) => {
             const { currentCue } = note; 
             if(currentCue % 29 === 1 && currentCue < 120) {
                 p.gridCells.forEach(cell => {
-                    cell.hue = undefined;
+                    cell.pattern = undefined;
                 });
             }
         }
 
+        // Subtrator - Raison d'etre
         p.executeCueSet2 = (note) => {
-            const emptyCells = p.gridCells.filter(cell => cell.hue === undefined);
+            const emptyCells = p.gridCells.filter(cell => cell.pattern === undefined);
             const randomCell = p.random(emptyCells);
-            randomCell.hue = 360;
+            randomCell.pattern = new AnimatedRectangle(
+                p,
+                randomCell.x - (randomCell.size / 2),
+                randomCell.y - (randomCell.size / 2),
+                randomCell.size,
+                60
+            );
         }
 
+        // Subtrator - Vibra
         p.executeCueSet3 = (note) => {
-            const emptyCells = p.gridCells.filter(cell => cell.hue === undefined);
+            const emptyCells = p.gridCells.filter(cell => cell.pattern === undefined);
             const randomCell = p.random(emptyCells);
-            randomCell.hue = 240;
+            randomCell.pattern = new AnimatedRectangle(
+                p,
+                randomCell.x - (randomCell.size / 2),
+                randomCell.y - (randomCell.size / 2),
+                randomCell.size,
+                200
+            );
         }
 
+        // Europa - Night Driver
         p.executeCueSet4 = (note) => {
-            const emptyCells = p.gridCells.filter(cell => cell.hue === undefined);
+            const emptyCells = p.gridCells.filter(cell => cell.pattern === undefined);
             const randomCell = p.random(emptyCells);
-            randomCell.hue = 80;
+            randomCell.pattern = new AnimatedRectangle(
+                p,
+                randomCell.x - (randomCell.size / 2),
+                randomCell.y - (randomCell.size / 2),
+                randomCell.size,
+                100
+            );
         }
 
+        // Europa - Impact Square
         p.executeCueSet5 = (note) => {
-            const emptyCells = p.gridCells.filter(cell => cell.hue === undefined);
+            const { durationTicks } = note;
+            console.log(durationTicks);
+            const emptyCells = p.gridCells.filter(cell => cell.pattern === undefined);
             const randomCell = p.random(emptyCells);
-            randomCell.hue = 160;
+            randomCell.pattern = new AnimatedRectangle(
+                p,
+                randomCell.x - (randomCell.size / 2),
+                randomCell.y - (randomCell.size / 2),
+                randomCell.size,
+                320
+            );
+            if(durationTicks > 19000) {
+                p.bgRect = {
+                    width: p.width / 1000,
+                    height: p.height / 1000,
+                    hue: 160
+                }
+            }
         }
 
         p.hasStarted = false;
