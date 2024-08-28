@@ -1,7 +1,7 @@
 {
-  "name": "strings-no-2",
+  "name": "rectangles-no-8",
   "version": "1.0.0",
-  "homepage": "https://strings-no-2.labcat.nz",
+  "homepage": "https://rectangles-no-8.labcat.nz",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",

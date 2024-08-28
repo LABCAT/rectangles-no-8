@@ -80,7 +80,7 @@ const P5SketchWithAudio = () => {
             p.colorMode(p.HSB);
             p.rectMode(p.CENTER);
             p.background(0, 0, 0, 0.5);
-            p.strokeWeight(5);
+            p.strokeWeight(3);
             let maxX = 16;
             let maxY = 8;
             p.horizontalGrid = true;
@@ -108,39 +108,25 @@ const P5SketchWithAudio = () => {
             p.translateX = (p.width - (maxX * p.cellSize)) / 2 + (p.cellSize / 2);
             p.translateY = (p.height - (maxY * p.cellSize)) / 2 + (p.cellSize / 2);
             p.translate(p.translateX, p.translateY);
-
-            // p.snake = new AnimatedRectangle(
-            //     p,
-            //     p.width / 2,
-            //     p.height / 2
-            // )
         }
 
         p.draw = () => {
             p.background(0, 0, 0);
-            // p.snake.update();
-		    // p.snake.draw();
-            
-		    // if (p.snake.dead) {
-            //     p.snake = new AnimatedRectangle(p, p.snake.x, p.snake.y);
-            // }
             p.translate(p.translateX, p.translateY);
-
-            
 
             if(p.bgRect) {
                 const { width, height, hue } = p.bgRect;
                 const x = p.width / 2 - p.translateX;
                 const y = p.height / 2 - p.translateY;
-                p.stroke(hue, 100, 100);
+                p.stroke(hue, 100, 100, 0);
                 p.fill(hue, 100, 100, 0.2);
                 p.rect(x, y, width, height);
                 p.fill(hue, 100, 100, 0.4);
                 p.rect(x, y, width / 2, height / 2);
                 p.fill(hue, 100, 100, 0.6);
                 p.rect(x, y, width / 4, height / 4);
-                p.bgRect.width = p.bgRect.width + 8;
-                p.bgRect.height = p.bgRect.height + 8;
+                p.bgRect.width = p.bgRect.width + p.width / 10;
+                p.bgRect.height = p.bgRect.height + p.height / 10;
             }
 
             p.stroke(0, 0, 0);
@@ -151,16 +137,17 @@ const P5SketchWithAudio = () => {
                 if(pattern === undefined) {
                     p.stroke(0, 0, 100);
                     p.fill(0, 0, 100);
+                    p.rect(x, y, size, size);
                 } 
                 else {
+                    p.fill(0, 0, 0);
+                    p.rect(x, y, size, size);
+                    p.stroke(pattern.hue, 100, 100);
+                    p.fill(pattern.hue, 100, 100, 0.25);
+                    p.rect(x, y, size, size);
                     pattern.update();
                     pattern.draw();
-                    
-                    // if (hue.dead) {
-                    //     hue = new AnimatedRectangle(p, hue.x, hue.y, hue.size, hue.hue);
-                    // }
                 }
-                p.rect(x, y, size, size);
             }
             p.translate(-p.translateX, -p.translateY);
         }
@@ -183,7 +170,7 @@ const P5SketchWithAudio = () => {
                 randomCell.x - (randomCell.size / 2),
                 randomCell.y - (randomCell.size / 2),
                 randomCell.size,
-                60
+                0
             );
         }
 
@@ -196,7 +183,7 @@ const P5SketchWithAudio = () => {
                 randomCell.x - (randomCell.size / 2),
                 randomCell.y - (randomCell.size / 2),
                 randomCell.size,
-                200
+                210
             );
         }
 
@@ -209,14 +196,20 @@ const P5SketchWithAudio = () => {
                 randomCell.x - (randomCell.size / 2),
                 randomCell.y - (randomCell.size / 2),
                 randomCell.size,
-                100
+                90
             );
         }
 
+        p.impactHues = [330, 30, 60, 180, 270, 300]
+
+        p.currentImpactHue = 330;
+
         // Europa - Impact Square
         p.executeCueSet5 = (note) => {
-            const { durationTicks } = note;
-            console.log(durationTicks);
+            const { durationTicks, currentCue } = note;
+            if(currentCue % 12 === 0) {
+                p.currentImpactHue = p.random(p.impactHues.filter(hue => hue !== p.currentImpactHue));
+            }
             const emptyCells = p.gridCells.filter(cell => cell.pattern === undefined);
             const randomCell = p.random(emptyCells);
             randomCell.pattern = new AnimatedRectangle(
@@ -224,13 +217,13 @@ const P5SketchWithAudio = () => {
                 randomCell.x - (randomCell.size / 2),
                 randomCell.y - (randomCell.size / 2),
                 randomCell.size,
-                320
+                p.currentImpactHue
             );
             if(durationTicks > 19000) {
                 p.bgRect = {
                     width: p.width / 1000,
                     height: p.height / 1000,
-                    hue: 160
+                    hue: p.currentImpactHue
                 }
             }
         }

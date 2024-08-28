@@ -10,7 +10,8 @@ export default class AnimatedRectangle {
         this.x = x;
         this.y = y;
         this.size = size;
-        this.colour = this.p.color(hue, 90, 90);
+        this.hue = hue;
+        this.colour = this.p.color(hue, 100, 100, 0.5);
         
         this.segCount = this.p.random(2, 10);
         this.segs = [];
@@ -76,7 +77,7 @@ export default class AnimatedRectangle {
 			}
 		}
 
-        if(Math.random() < 0.9) {
+        if(Math.random() < 0.95) {
             this.dead = false;
         }
 
